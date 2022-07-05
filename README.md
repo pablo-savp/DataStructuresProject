@@ -13,7 +13,7 @@ Some functions were:
 -Save File
 -Exit
 
-# Wha I learned
+# What I learned
 -C++ Data Structures
 -File management
 -Pointers
