@@ -1,7 +1,11 @@
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
-#include <bits/stdc++.h>
+#include <vector>
+#include <string.h>
+#include <iostream>
 #include "linea.h"
+#include "Grafo.h"
+
 using namespace std;
 class sequence
 {
@@ -15,7 +19,7 @@ public:
     sequence();
     char* obtenerNombre();
     vector<linea> obtenerSeq();
-    void ponerSequence(vector<linea> v);
+    void ponerSequence(vector<linea> temp);
     int obtenerBase();
     void ponerBase(int b);
     char obtenerIdentificador();
@@ -28,6 +32,7 @@ public:
     vector<int> contarFrecuencias();
     int enmascararSeq(char n[]);
     int listarseq();
+    Grafo<char,double> crearGrafo();
 };
 
 #include "sequence.hxx"

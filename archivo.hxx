@@ -1,10 +1,5 @@
 #include "archivo.h"
-#include "sequence.h"
-#include "linea.h"
-#include "Nodo.h"
-#include "tablaCodigos.h"
-#include <bits/stdc++.h>
-#define MAXI 500
+#define MAXI 1000000
 using namespace std;
 
 archivo::archivo()
@@ -54,7 +49,7 @@ int archivo::leerArchivo(char nombre[])
                         {
                             verificar=0;
                             verificarultima=true;
-                            //  cout<<"esta es una seqprin";
+
                             vector<linea> verificarjustifi=secuencia.obtenerSeq();
                             vector<linea>::iterator now=verificarjustifi.begin();
                             int justificacion=now->obtenerLinea().size();
@@ -69,7 +64,7 @@ int archivo::leerArchivo(char nombre[])
                                     if(cont==numlineas&&now->obtenerLinea().size()<=justificacion&&verificar==1)
                                     {
                                         verificarultima=true;
-                                        // cout<<"entro a ultima linea";
+
                                     }
 
                                 }
@@ -121,7 +116,7 @@ int archivo::leerArchivo(char nombre[])
             int justificacion=now->obtenerLinea().size();
             int numlineas=verificarjustifi.size();
             int cont=1;
-            // cout<<"esta es una seq ultima";
+
             for(; now!=verificarjustifi.end(); now++)
             {
                 if((now->obtenerLinea().size()!=justificacion))
@@ -131,7 +126,7 @@ int archivo::leerArchivo(char nombre[])
                     if(cont==numlineas&&now->obtenerLinea().size()<=justificacion&&verificar==1)
                     {
                         verificarultima=true;
-                        //  cout<<"entro a ultima linea";
+
                     }
 
                 }
@@ -160,7 +155,9 @@ int archivo::leerArchivo(char nombre[])
 //imprimirsequencias();
 
 
-
+   if(abrir!=-1) {
+     llenarGrafos();
+   }
     return abrir;
 };
 void archivo::imprimirsequencias()
@@ -310,12 +307,16 @@ vector<int> archivo::listarseq()
     return temp;
 };
 
-void archivo::Codificar(char n[])
+bool archivo::Codificar(char n[])
 {
+
     int j=1;
+
+//cout<<sequences.size()<<endl;
     vector<sequence>::iterator it=sequences.begin();
     for(; it!=sequences.end(); it++)
     {
+        //cout<<it->obtenerNombre()<<endl;
         vector<linea> temo=it->obtenerSeq();
         vector<linea>::iterator it2=temo.begin();
         for(; it2!=temo.end(); it2++)
@@ -327,7 +328,9 @@ void archivo::Codificar(char n[])
                 BasesCont(listaBases,*it3);
                 j++;
             }
+            //cout<<endl;
         }
+        //cout<<endl;
     }
     ListaOrd(listaBases);
 
@@ -336,7 +339,7 @@ void archivo::Codificar(char n[])
     while (aux != NULL)
     {
         int ascci=aux->base;
-        string resultado = "v" +to_string(ascci)  + "f" +to_string(aux->frecuencia) ;
+        string resultado = "v" +to_string(ascci)  + "f" +to_string(aux->frecuencia) ; // concatenar
 
         strcpy(aux->codigo,resultado.c_str());
         if(aux->sig->sig==NULL)
@@ -367,26 +370,26 @@ void archivo::Codificar(char n[])
 
     FILE *archivoBIN;
     archivoBIN=fopen(n,"wb");
+    if(!archivoBIN)
+    {
+        return false;
+    }
     int nElementos = 0;
     tablaCodigos *auxTabla = tablasBits;
     while(auxTabla)
     {
-
         nElementos++;
         auxTabla = auxTabla->sig;
     }
 
-
     fwrite(&nElementos, sizeof(int)-2, 1, archivoBIN);
-    cout<<nElementos<<endl;
-
-    while(tablasBits)
+    auxTabla = tablasBits;
+    while(auxTabla)
     {
+        fwrite(&auxTabla->base, sizeof(char), 1, archivoBIN);
+        fwrite(&auxTabla->frecuencias, sizeof(long int), 1, archivoBIN);
 
-        fwrite(&tablasBits->base, sizeof(char), 1, archivoBIN);
-        fwrite(&tablasBits->frecuencias, sizeof(long int), 1, archivoBIN);
-
-        tablasBits = tablasBits->sig;
+        auxTabla = auxTabla->sig;
     }
     int cantSeq = contarSeq();
     fwrite(&cantSeq, sizeof(int),1, archivoBIN);
@@ -398,9 +401,9 @@ void archivo::Codificar(char n[])
         fwrite(&tamNombre, sizeof(int)-2, 1, archivoBIN);
 
         nombreSecuencia=sequences[ind].obtenerNombre();
-
+        fputs(nombreSecuencia,archivoBIN);
     }
-    vector<int> longSeq = listarseq();
+    vector<int> longSeq=listarseq();
     vector<linea> auxLinea;
     vector<char> auxCaracteres;
     int indentacion;
@@ -410,48 +413,253 @@ void archivo::Codificar(char n[])
     char caracter;
     for(int ind = 0; ind < sequences.size(); ind++)
     {
-
         fwrite(&longSeq[ind], sizeof(long int), 1, archivoBIN);
+        cout<<"Longitud: "<<longSeq[ind]<<endl;
         auxLinea = sequences[ind].obtenerLineas();
         auxCaracteres = auxLinea[0].obtenerLinea();
         indentacion = auxCaracteres.size();
 
         fwrite(&indentacion, sizeof(int)-2, 1, archivoBIN);
-
-        for(int Jind = 0; Jind < auxLinea.size(); Jind++)
+        for(int Jind = 0 ; Jind < auxLinea.size(); Jind++)
         {
             auxCaracteres = auxLinea[Jind].obtenerLinea();
-            for(int Xind = 0; Xind < auxCaracteres.size(); Xind++)
+            for(int Xind = 0 ; Xind < auxCaracteres.size(); Xind++)
             {
-
                 caracter = auxCaracteres[Xind];
                 tabla = buscaCaracter(caracter);
-                caracter = valor >>(acumBits-8);
-                fwrite(&caracter,sizeof(char),1,archivoBIN);
-                acumBits-=8;
+                while(acumBits + tabla->xbits > 32)
+                {
+                    caracter = valor >>(acumBits-8);
+                    fwrite(&caracter,sizeof(char),1,archivoBIN);
+                    acumBits-=8;
+                }
+                valor <<= tabla->xbits;
+                valor |= tabla->bits;
+                acumBits += tabla->xbits;
             }
-            valor <<= tabla->xbits;
-            valor |= tabla->bits;
-            acumBits += tabla->xbits;
         }
-    }
-    while(acumBits>0)
-    {
-        if(acumBits>=8)
+        while(acumBits>0)
         {
-            caracter = valor >> (acumBits-8);
+            if(acumBits>=8)
+            {
+                caracter = valor >> (acumBits-8);
+            }
+            else
+            {
+                caracter = valor << (8-acumBits);
+            }
+            fwrite(&caracter, sizeof(char), 1, archivoBIN);
+            acumBits -= 8;
         }
-        else
-        {
-            caracter = valor << (8-acumBits);
-        }
-        fwrite(&caracter, sizeof(char), 1, archivoBIN);
-        acumBits -= 8;
+        indentacion = 0;
     }
-
     fclose(archivoBIN);
+    return true;
 
 };
+
+bool archivo::Decodificar(char n[])
+{
+
+///////////////////////////////////////////////////////
+    long int longitud;
+    int cantBases;
+    tablaCodigos *r, *s;
+    int i,j;
+// listaBases = NULL;
+    FILE* ArchivoBIN;
+//cout<<"antes de abrir";
+    ArchivoBIN = fopen(n, "rb");
+    if(!ArchivoBIN)
+    {
+        return false;
+    }
+
+    fread(&cantBases, sizeof(int)-2, 1, ArchivoBIN);
+
+    Nodo *aux = listaBases;
+    char auxBase;
+    long int auxFrecuencias;
+    for(int p=0; p<cantBases; p++)
+    {
+        Nodo *nuevo;
+        nuevo = new Nodo();
+        fread(&auxBase, sizeof(char), 1, ArchivoBIN);
+        // cout<<"car:"<<auxBase<<endl;
+        fread(&auxFrecuencias, sizeof(long int), 1, ArchivoBIN);
+        //cout<<"frec:"<<auxFrecuencias<<endl;
+
+        nuevo->frecuencia = auxFrecuencias;
+        nuevo->base = auxBase;
+
+        aux->sig=nuevo;
+
+        aux=aux->sig;
+
+    }
+    ListaOrd(listaBases);
+
+    Nodo *aux2 = listaBases;
+    while (aux2 != NULL)
+    {
+        if(aux2->sig->sig==NULL)
+        {
+            aux2->sig=NULL;
+        }
+        // cout<<"Base:"<<aux2->base<<"    Frec:"<<aux2->frecuencia<<endl;;
+        aux2=aux2->sig;
+    }
+    ////////////////////////////////////////////////////////////////
+    nodoArbol=listaBases;
+    Nodo* nuevo;
+    while(nodoArbol && nodoArbol->sig)
+    {
+        nuevo = (Nodo *)malloc(sizeof(Nodo));
+        nuevo->base = 0;
+        nuevo->der = nodoArbol;
+        nodoArbol = nodoArbol->sig;
+        nuevo->izq = nodoArbol;
+        nodoArbol = nodoArbol->sig;
+        nuevo->frecuencia = nuevo->der->frecuencia + nuevo->izq->frecuencia;
+        PonerOrden(nodoArbol, nuevo);
+    }
+
+
+    tablasBits=NULL;
+    crearTablaCodigos(nodoArbol, 0, 0);
+    //   tablaCodigos *auxTabla = tablasBits;
+    //   while(auxTabla != NULL){
+    //    cout<<"Base: "<<auxTabla->base<<" Codigo: "<<auxTabla->bits<<" cantBits: "<<auxTabla->xbits<<endl;
+    //    auxTabla=auxTabla->sig;
+    //  }
+
+    int cantSecuencias;
+    char nombreSecuencia;
+    fread(&cantSecuencias, sizeof(int), 1, ArchivoBIN);
+
+    char c;
+    char nombre[100];
+    int tamNombre=0;
+    int acum;
+    for(int s=0; s<cantSecuencias; s++)
+    {
+        char nombre[100];
+        sequence secuencia;
+        fread(&tamNombre, sizeof(int)-2, 1, ArchivoBIN);
+        for(int n=0; n<tamNombre; n++)
+        {
+            fread(&c, sizeof(char), 1, ArchivoBIN);
+            nombre[n]=c;
+
+        }
+
+
+
+        // cout<<"Nombre:"<<nombre<<endl;
+
+        secuencia.ponerNombre(nombre);
+        for(int i=0; i<100; i++)
+        {
+            nombre[i]='\0';
+        }
+        // cout<<"Nombre secuencia:"<<secuencia.obtenerNombre()<<endl;
+
+        sequences.push_back(secuencia);
+    }
+
+    long int bits;
+    vector<int>longitudes;
+    vector<int>indentaciones;
+    long int longSecuencia;
+    int indentacionSecuencia;
+    aux = nodoArbol;
+    int num2;
+    int cont2 = 0;
+    char aBase;
+    vector<sequence>::iterator ms=sequences.begin();
+    for(int t=0; t<cantSecuencias; t++)
+    {
+        vector<char> nuevoCarac;
+        linea nuevoLineas;
+        vector<linea> nuevoLineas2;
+        fread(&longSecuencia, sizeof(long int), 1, ArchivoBIN);
+        fread(&indentacionSecuencia, sizeof(int)-2,1, ArchivoBIN);
+
+        longitudes.push_back(longSecuencia);
+        indentaciones.push_back(indentacionSecuencia);
+
+        for(int i=0; i<longSecuencia; i++)
+        {
+
+            if(bits & 0x80000000)
+            {
+                aux = aux->der;
+            }
+            else
+            {
+                aux = aux->izq;
+            }
+            bits <<= 1;
+            j++;
+            if(8 == j)
+            {
+                num2 = fread(&auxBase, sizeof(char), 1, ArchivoBIN);
+                bits |= auxBase;
+                j = 0;
+            }
+            if(!aux->der && !aux->izq)
+            {
+                aBase=aux->base;
+                aux=nodoArbol;
+            }
+            if(cont2 < indentacionSecuencia)
+            {
+                nuevoCarac.push_back(aBase);
+                cont2++;
+            }
+            else
+            {
+
+                nuevoLineas.ponerLinea(nuevoCarac);
+                nuevoLineas2.push_back(nuevoLineas);
+                nuevoCarac.clear();
+                cont2 = 0;
+                i--;
+            }
+
+        }
+        ms->ponerSequence(nuevoLineas2);
+        ms++;
+
+
+        nuevoLineas2.clear();
+    }
+
+    tablaCodigos* taux;
+    taux=tablasBits;
+    while(taux!=NULL)
+    {
+        taux->base='\0';
+        taux->bits=0;
+        taux->xbits=0;
+        taux->frecuencias=0;
+        taux=taux->sig;
+    }
+    Nodo* laux;
+    laux=listaBases;
+    while(laux!=NULL)
+    {
+        laux->base='\0';
+        laux->frecuencia=0;
+
+        laux=laux->sig;
+    }
+    free(nodoArbol);
+    free(tablasBits);
+    return true;
+
+};
+
 void archivo::BasesCont(Nodo* &ListaBases, char d)
 {
 
@@ -567,12 +775,12 @@ void archivo::crearTablaCodigos(Nodo *nodo, int numBits, int codigo)
 void archivo::insertarTablaCodigos(char base, int numBits, int codigo, int frecuencia)
 {
     tablaCodigos *nuevaTabla, *tabla2, *tabla3;
-    nuevaTabla=(tablaCodigos *)malloc(sizeof(tablaCodigos));;
+    nuevaTabla=(tablaCodigos *)malloc(sizeof(tablaCodigos));
     nuevaTabla->base = base;
     nuevaTabla->bits = codigo;
     nuevaTabla->xbits = numBits;
     nuevaTabla->frecuencias = frecuencia;
-    cout<<"Base: "<<base<<" codigo: "<<codigo<<" numBits: "<<numBits<<endl;
+
     if(!tablasBits)
     {
         tablasBits = nuevaTabla;
@@ -603,4 +811,118 @@ tablaCodigos* archivo::buscaCaracter(char c)
     while(t && t->base != c)
         t = t->sig;
     return t;
+};
+ bool archivo::llenarGrafos(){
+   vector<sequence>::iterator ms=sequences.begin();
+for(;ms!=sequences.end();ms++)
+{
+  grafos.push_back(ms->crearGrafo());
+}
+ 
+ return true;
+ };
+
+long archivo::BuscarIndiceVertice(unsigned long i, unsigned long j,char n[] ){
+
+  long indVertice = -1;
+  long retornar = -1;
+  vector<linea> seq = buscarSecuencia(n).obtenerSeq();
+  vector<char> car;
+
+  for(long f = 0 ; f < seq.size(); f++){
+    car = seq[f].obtenerLinea();
+    for(long c = 0;c <car.size(); c++){
+      indVertice++;
+      if(f == i && c == j){
+        return indVertice;
+      }
+    }
+  }
+
+  return retornar;
+};
+
+
+
+int archivo::RutaMasCorta(char n[], unsigned long i, unsigned long j, unsigned long x, unsigned long y){
+
+  unsigned long inicio = 0;
+  unsigned long fin = 0;
+  this->ruta.clear();
+   for(int a = 0; a < this->sequences.size(); a++){
+     if(strcmp(n, sequences[a].obtenerNombre())==0){
+       if(BuscarIndiceVertice(i,j,n)!= -1){
+         if(BuscarIndiceVertice(x,y,n)!= -1){
+           inicio = BuscarIndiceVertice(i,j,n);
+           fin = BuscarIndiceVertice(x,y,n);
+           ruta = grafos[a].Dijkstra(inicio, fin);
+           return 3;
+         }
+         else{
+           return 2;
+         }
+       }
+       else{
+         return 1;
+       }
+     }
+   }
+  return 0;
+ };
+
+void archivo::ImprimirRutaCorta(){
+  for(int i = 0; i < this->ruta.size(); i++)
+    cout<<this->ruta[i]<<"-";
+}
+
+void archivo::ImprimirCosto(char n[]){
+  double cosTotal = 0.0;
+   for(int a = 0; a < this->sequences.size(); a++){
+     if(strcmp(n, sequences[a].obtenerNombre())==0){
+    for( unsigned int i = 0; i < ruta.size( ) - 1; ++i )
+      cosTotal += grafos[a].ObtenerCostoArista( ruta[ i ], ruta[ i + 1 ] );
+    cout << cosTotal <<endl;
+     }
+    }
+    
+}
+
+int archivo::BaseRemota(char n[], unsigned long i, unsigned long j){
+  unsigned long inicio = 0;
+  this->ruta.clear();
+  for(int a = 0; a < this->sequences.size(); a++){
+     if(strcmp(n, sequences[a].obtenerNombre())==0){
+       if(BuscarIndiceVertice(i,j,n)!= -1){
+         inicio = BuscarIndiceVertice(i,j,n);
+         ruta = grafos[a].baseRemota(inicio);
+         return 2;
+       }
+       else
+        return 1;
+     }
+  }
+  return 0;
+}
+
+vector<long> archivo::EncontrarAB(unsigned long indiceFinal, char n[]){
+  unsigned long cont = -1;
+  vector<long> pos;
+  vector<linea> seq = buscarSecuencia(n).obtenerSeq();
+  vector<char> car;
+   for(long f = 0 ; f < seq.size(); f++){
+    car = seq[f].obtenerLinea();
+    for(long c = 0;c <car.size(); c++){
+      cont++;
+      if(cont == indiceFinal){
+        pos.push_back(f);
+        pos.push_back(c);
+      }
+    }
+  }
+  return pos;
+}
+
+unsigned long archivo::ObtenerIndiceFinal(){
+
+  return this->ruta[ruta.size()-1];
 }

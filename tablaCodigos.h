@@ -1,6 +1,8 @@
 #ifndef TABLACODIGOS_H
 #define TABLACODIGOS_H
-#include <bits/stdc++.h>
+#include <vector>
+#include <string.h>
+#include <iostream>
 using namespace std;
 struct tablaCodigos{
  char base;

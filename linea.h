@@ -1,6 +1,7 @@
 #ifndef LINEA_H
 #define LINEA_H
-#include <bits/stdc++.h>
+#include <vector>
+#include <string.h> 
 using namespace std;
 class linea
 {
@@ -10,8 +11,7 @@ public:
     linea();
     vector<char> obtenerLinea();
     void ponerLinea(vector<char> v);
-    int enmascararLinea(char n[]);
-    int contarSubSecuencias(char n[]);
+    void enmascararLinea(int pos);
 };
 
 #include "linea.hxx"

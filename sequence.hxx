@@ -1,7 +1,5 @@
 #include "sequence.h"
-#include "linea.h"
-#include <bits/stdc++.h>
-using namespace std;
+#include <math.h>
 sequence::sequence(){
 };
 
@@ -16,8 +14,8 @@ strcpy(nombre,n);
 void sequence::ponerSeq(linea v){
   seq.push_back(v);
 };
-void sequence::ponerSequence(vector<linea> v){
-  seq=v;
+void sequence::ponerSequence(vector<linea> temp){
+  seq = temp;
 };
 vector<linea> sequence::obtenerSeq(){
   return seq;
@@ -162,30 +160,166 @@ vector<int> sequence::contarFrecuencias()
 
 int sequence::contarFrecuencias(char n[]){
   int cantRepetidas = 0;
+  int pos;
+  int repetidas;
   vector<linea>::iterator lineas = seq.begin();
-  vector<char> linea;
+  vector<char> lin;
+  vector<linea> seqTemp;
+  vector<char>secuenTemp;
   for(; lineas != seq.end(); lineas++){
-    cantRepetidas += lineas->contarSubSecuencias(n);
-  }
+      lin = lineas->obtenerLinea();
+      for(int i = 0; i < lin.size(); i++){
+        secuenTemp.push_back(lin[i]);
+      }
+   }
+   for(int i = 0; i < secuenTemp.size();i++){
+     if(secuenTemp[i]==n[0]){
+       pos = i;
+       repetidas = 1;
+       for(int j = 1; j < strlen(n); j++){
+         if(secuenTemp[pos+j]==n[j]){
+            repetidas++;
+         }
+       }
+       if(repetidas == strlen(n)){
+         cantRepetidas++;
+       }
+       repetidas = 0;
+     }
+   }
   return cantRepetidas;
 }
 
 int sequence::enmascararSeq(char n[]){
   int cantEnmascaradas = 0;
+  int pos;
+  int repetidas;
   vector<linea>::iterator lineas = seq.begin();
-  vector<char> linea;
+  vector<char> lin;
+  vector<linea> seqTemp;
+  vector<char>secuenTemp;
   for(; lineas != seq.end(); lineas++){
-    cantEnmascaradas += lineas->enmascararLinea(n);
-  }
+      lin = lineas->obtenerLinea();
+      for(int i = 0; i < lin.size(); i++){
+        secuenTemp.push_back(lin[i]);
+      }
+   }
+   for(int i = 0; i < secuenTemp.size();i++){
+     if(secuenTemp[i]==n[0]){
+       pos = i;
+       repetidas = 1;
+       for(int j = 1; j < strlen(n); j++){
+         if(secuenTemp[pos+j]==n[j]){
+            repetidas++;
+         }
+       }
+       if(repetidas == strlen(n)){
+         for(int j = 0; j < strlen(n);j++){
+           secuenTemp[j+pos] = 'X';
+         }
+         cantEnmascaradas++;
+       }
+       repetidas = 0;
+     }
+   }
+   int temp = 0;
+   for(lineas = seq.begin(); lineas != seq.end(); lineas++){
+     lin = lineas->obtenerLinea();
+      for(int i = 0; i < lin.size(); i++){
+        if(secuenTemp[temp] == 'X'){
+          lineas->enmascararLinea(i);
+        }
+        temp++;
+      }
+   }
   return cantEnmascaradas;
 };
 
 int sequence::listarseq(){
   vector<linea>::iterator it= seq.begin();
+  vector<char> caracteres;
   int acum=0;
   for(;it!=seq.end();it++)
   {
-    acum=acum+it->obtenerLinea().size();
+    caracteres = it->obtenerLinea();
+    for(int i = 0; i < caracteres.size();i++){
+      if(caracteres[i] != '-'){
+        acum++;
+      }
+    }
   }
   return acum;
+};
+Grafo<char,double> sequence::crearGrafo(){
+
+  Grafo<char,double> t;
+    
+    vector<linea>::iterator it=seq.begin();
+    for(;it!=seq.end();it++)
+    {
+      vector<char> temp= it->obtenerLinea();
+      for(int i=0;i<temp.size();i++)
+      {
+          t.InsertarVertice(temp[i]);
+      }
+    }
+    int verticeH=0;
+    float n;
+   //cout<<t.ObtenerNumVertices()<<endl;
+   for(int i=0;i<seq.size();i++)
+   {
+     for(int j=0;j<seq[i].obtenerLinea().size();j++)
+     {
+       if(verticeH<t.ObtenerNumVertices()&&(verticeH+1)!=((seq[0].obtenerLinea().size()*(i+1))-((seq[0].obtenerLinea().size()-(seq[i].obtenerLinea().size())))))
+       {
+         // n=1/(1+abs((int(t.ObtenerVertice(verticeH))-int(t.ObtenerVertice(verticeH+1)))));
+          //cout<<n<<endl;
+          double resta1=(int(t.ObtenerVertice(verticeH))-int(t.ObtenerVertice(verticeH+1)));
+          double a =1/(1+abs(resta1));
+          double resta2=(int(t.ObtenerVertice(verticeH+1))-int(t.ObtenerVertice(verticeH)));
+          double b=1/(1+abs(resta2));
+          //cout<<a<<"+"<<endl;
+        // cout<<verticeH<<"+"<<verticeH+1<<endl;
+          t.InsertarArista(verticeH,verticeH+1,a);
+          t.InsertarArista(verticeH+1,verticeH,b);
+          
+       }
+       verticeH++;
+     }
+   }
+   //cout<<t.ObtenerNumerodeAristas()<<endl;
+
+ for(int i=0;i<seq.size();i++)  
+   {
+
+     for(int j=0;j<seq[i].obtenerLinea().size();j++)
+     {
+      if(i<(seq.size()-1))
+      {
+        if(j<seq[i+1].obtenerLinea().size())
+        {
+          
+          unsigned long verticeA=((seq[0].obtenerLinea().size()*(i+1))-(seq[0].obtenerLinea().size()-((j-1)+1)));
+          unsigned long verticeB=((seq[0].obtenerLinea().size()*(i+1+1))-(seq[0].obtenerLinea().size()-((j-1)+1)));
+          //cout<<)<<" + ";
+          //cout<<<<endl;
+          double negativo=t.ObtenerVertice(verticeA)-t.ObtenerVertice(verticeB);
+          double negativo2=t.ObtenerVertice(verticeB)-t.ObtenerVertice(verticeA);
+          double va=1/(1+abs(negativo));
+          double vb=1/(1+abs(negativo2));
+           t.InsertarArista(verticeA,verticeB,va);
+          t.InsertarArista(verticeB,verticeA,vb);
+        }
+        
+      }
+       
+       
+
+     }
+
+
+   }
+  
+ //cout<<t.ObtenerNumerodeAristas()<<endl;
+return t;
 };

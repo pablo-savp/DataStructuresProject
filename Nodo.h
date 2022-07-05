@@ -1,6 +1,8 @@
 #ifndef NODO_H
 #define NODO_H
-#include <bits/stdc++.h>
+#include <vector>
+#include <string.h>
+#include <iostream>
 using namespace std;
 struct Nodo{
   char base;
@@ -9,7 +11,6 @@ struct Nodo{
   Nodo *sig;
   Nodo *izq;
   Nodo *der;
-  void eliminarArbol(Nodo *nodo);
   
 };
 
